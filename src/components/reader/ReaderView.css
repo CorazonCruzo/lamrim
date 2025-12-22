@@ -1,6 +1,7 @@
 .reader-view {
-  font-family: var(--font-serif);
-  line-height: 1.8;
+  font-family: var(--reader-font-family);
+  font-size: var(--reader-font-size);
+  line-height: var(--reader-line-height);
   color: var(--color-text-primary);
 }
 

@@ -16,6 +16,64 @@
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
+
+  --reader-font-size: 1rem;
+  --reader-line-height: 1.6;
+  --reader-font-family: var(--font-serif);
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --color-bg-primary: #1a1a1a;
+  --color-bg-secondary: #2d2d2d;
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: #a0a0a0;
+  --color-border: #404040;
+}
+
+/* Sepia theme */
+[data-theme="sepia"] {
+  --color-bg-primary: #f4ecd8;
+  --color-bg-secondary: #e8dcc8;
+  --color-text-primary: #5c4b37;
+  --color-text-secondary: #7a6a56;
+  --color-border: #d4c4a8;
+}
+
+/* Font sizes */
+[data-font-size="small"] {
+  --reader-font-size: 0.875rem;
+}
+[data-font-size="medium"] {
+  --reader-font-size: 1rem;
+}
+[data-font-size="large"] {
+  --reader-font-size: 1.125rem;
+}
+[data-font-size="xlarge"] {
+  --reader-font-size: 1.25rem;
+}
+
+/* Font families */
+[data-font-family="serif"] {
+  --reader-font-family: var(--font-serif);
+}
+[data-font-family="sans-serif"] {
+  --reader-font-family: var(--font-sans);
+}
+[data-font-family="monospace"] {
+  --reader-font-family: var(--font-mono);
+}
+
+/* Line heights */
+[data-line-height="compact"] {
+  --reader-line-height: 1.4;
+}
+[data-line-height="normal"] {
+  --reader-line-height: 1.6;
+}
+[data-line-height="relaxed"] {
+  --reader-line-height: 1.8;
 }
 
 * {
