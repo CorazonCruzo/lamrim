@@ -1,9 +1,9 @@
-export type SectionStatus = 'locked' | 'available' | 'reading' | 'completed';
+export type SectionStatus = 'available' | 'completed';
 
 export interface SectionProgress {
   sectionId: string;
   status: SectionStatus;
-  startedAt?: Date;
+  bookmarked?: boolean;
   completedAt?: Date;
 }
 

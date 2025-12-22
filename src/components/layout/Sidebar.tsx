@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { tableOfContents } from '../../content';
+import { useProgress } from '../../contexts';
+import type { SectionStatus } from '../../types';
 import './Sidebar.css';
+
+function getStatusIcon(status: SectionStatus): string {
+  return status === 'completed' ? '●' : '○';
+}
 
 interface SidebarProps {
   currentSectionId?: string;
@@ -11,6 +17,7 @@ interface SidebarProps {
 
 export default function Sidebar({ currentSectionId, isOpen = false, onClose }: SidebarProps) {
   const location = useLocation();
+  const { getSectionStatus, isBookmarked, completedCount, totalCount } = useProgress();
   const [expandedVolumes, setExpandedVolumes] = useState<Set<string>>(() => {
     if (currentSectionId) {
       const volumeId = currentSectionId.split('-')[0];
@@ -54,6 +61,17 @@ export default function Sidebar({ currentSectionId, isOpen = false, onClose }: S
 
         <div className="sidebar__header">
           <h2>Оглавление</h2>
+          <div className="sidebar__progress">
+            <div className="sidebar__progress-text">
+              Прочитано: {completedCount} из {totalCount}
+            </div>
+            <div className="sidebar__progress-bar">
+              <div
+                className="sidebar__progress-fill"
+                style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
         </div>
         <nav className="sidebar__nav">
           {tableOfContents.volumes.map((volume) => (
@@ -70,18 +88,26 @@ export default function Sidebar({ currentSectionId, isOpen = false, onClose }: S
 
               {expandedVolumes.has(volume.id) && (
                 <ul className="sidebar__sections">
-                  {volume.sections.map((section) => (
-                    <li key={section.id}>
-                      <NavLink
-                        to={`/read/${section.id}`}
-                        className={({ isActive }) =>
-                          `sidebar__section-link ${isActive ? 'active' : ''}`
-                        }
-                      >
-                        {section.title}
-                      </NavLink>
-                    </li>
-                  ))}
+                  {volume.sections.map((section) => {
+                    const status = getSectionStatus(section.id);
+                    const bookmarked = isBookmarked(section.id);
+                    return (
+                      <li key={section.id}>
+                        <NavLink
+                          to={`/read/${section.id}`}
+                          className={({ isActive }) =>
+                            `sidebar__section-link ${isActive ? 'active' : ''} status-${status}`
+                          }
+                        >
+                          <span className="sidebar__icons">
+                            <span className={`sidebar__bookmark ${bookmarked ? 'visible' : ''}`}>⚑</span>
+                            <span className="sidebar__status-icon">{getStatusIcon(status)}</span>
+                          </span>
+                          {section.title}
+                        </NavLink>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

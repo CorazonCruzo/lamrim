@@ -23,6 +23,30 @@
   color: var(--color-text-primary);
 }
 
+.sidebar__progress {
+  margin-top: 0.75rem;
+}
+
+.sidebar__progress-text {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.sidebar__progress-bar {
+  height: 4px;
+  background-color: var(--color-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sidebar__progress-fill {
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
 .sidebar__nav {
   padding: 0.5rem 0;
 }
@@ -64,22 +88,54 @@
 }
 
 .sidebar__section-link {
-  display: block;
-  padding: 0.5rem 1.25rem 0.5rem 2.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem 0.5rem 1.5rem;
   font-size: 0.875rem;
   color: var(--color-text-secondary);
   text-decoration: none;
   transition: background-color 0.2s, color 0.2s;
 }
 
+.sidebar__icons {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.sidebar__bookmark {
+  font-size: 0.875rem;
+  width: 1rem;
+  color: transparent;
+}
+
+.sidebar__bookmark.visible {
+  color: var(--color-primary);
+}
+
+.sidebar__status-icon {
+  font-size: 0.625rem;
+}
+
+.sidebar__section-link.status-completed .sidebar__status-icon {
+  color: rgba(76, 175, 80, 0.6);
+}
+
 .sidebar__section-link:hover {
   background-color: rgba(0, 0, 0, 0.05);
   color: var(--color-text-primary);
+  text-decoration: none;
 }
 
 .sidebar__section-link.active {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: rgba(92, 107, 192, 0.15);
+  color: var(--color-primary);
+}
+
+.sidebar__section-link.active .sidebar__status-icon {
+  color: var(--color-primary);
 }
 
 /* Mobile drawer styles */

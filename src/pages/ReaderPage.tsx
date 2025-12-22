@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSection } from '../hooks/useSection';
+import { useProgress } from '../contexts';
 import { ReaderView } from '../components/reader';
 import { Sidebar } from '../components/layout';
 import './ReaderPage.css';
@@ -8,7 +9,27 @@ import './ReaderPage.css';
 export default function ReaderPage() {
   const { sectionId } = useParams<{ sectionId: string }>();
   const { section, volume, content, isLoading, error, nextSection, prevSection } = useSection(sectionId);
+  const { getSectionStatus, isBookmarked, markAsCompleted, markAsUnread, toggleBookmark } = useProgress();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const status = sectionId ? getSectionStatus(sectionId) : 'available';
+  const bookmarked = sectionId ? isBookmarked(sectionId) : false;
+
+  const handleToggleCompleted = () => {
+    if (sectionId) {
+      if (status === 'completed') {
+        markAsUnread(sectionId);
+      } else {
+        markAsCompleted(sectionId);
+      }
+    }
+  };
+
+  const handleToggleBookmark = () => {
+    if (sectionId) {
+      toggleBookmark(sectionId);
+    }
+  };
 
   return (
     <div className="reader-layout">
@@ -39,12 +60,31 @@ export default function ReaderPage() {
           </div>
         ) : (
           <>
-            <div className="reader-breadcrumb">
-              <Link to="/">Главная</Link>
-              <span className="separator">/</span>
-              <span>{volume?.title}</span>
-              <span className="separator">/</span>
-              <span>{section.title}</span>
+            <div className="reader-header">
+              <div className="reader-breadcrumb">
+                <Link to="/">Главная</Link>
+                <span className="separator">/</span>
+                <span>{volume?.title}</span>
+                <span className="separator">/</span>
+                <span>{section.title}</span>
+              </div>
+
+              <div className="reader-controls">
+                <button
+                  className={`reader-control--bookmark ${bookmarked ? 'active' : ''}`}
+                  onClick={handleToggleBookmark}
+                  data-tooltip={bookmarked ? 'Убрать закладку' : 'Добавить закладку'}
+                >
+                  ⚑
+                </button>
+                <button
+                  className={`reader-control--status ${status === 'completed' ? 'completed' : ''}`}
+                  onClick={handleToggleCompleted}
+                  data-tooltip={status === 'completed' ? 'Отменить' : 'Прочитано'}
+                >
+                  {status === 'completed' ? '✓' : '○'}
+                </button>
+              </div>
             </div>
 
             <ReaderView content={content} />
