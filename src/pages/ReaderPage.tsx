@@ -1,63 +1,74 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSection } from '../hooks/useSection';
 import { ReaderView } from '../components/reader';
+import { Sidebar } from '../components/layout';
 import './ReaderPage.css';
 
 export default function ReaderPage() {
   const { sectionId } = useParams<{ sectionId: string }>();
   const { section, volume, content, isLoading, error, nextSection, prevSection } = useSection(sectionId);
-
-  if (isLoading) {
-    return (
-      <div className="reader-page">
-        <div className="reader-loading">Загрузка...</div>
-      </div>
-    );
-  }
-
-  if (error || !section || !content) {
-    return (
-      <div className="reader-page">
-        <div className="reader-error">
-          <h1>Раздел не найден</h1>
-          <p>{error || 'Запрошенный раздел не существует.'}</p>
-          <Link to="/" className="btn-primary">
-            На главную
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="reader-page">
-      <div className="reader-breadcrumb">
-        <Link to="/">Главная</Link>
-        <span className="separator">/</span>
-        <span>{volume?.title}</span>
-        <span className="separator">/</span>
-        <span>{section.title}</span>
+    <div className="reader-layout">
+      <Sidebar
+        currentSectionId={sectionId}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
+
+      <div className="reader-page">
+        <button
+          className="reader-menu-btn"
+          onClick={() => setIsSidebarOpen(true)}
+          aria-label="Открыть оглавление"
+        >
+          ☰ Оглавление
+        </button>
+
+        {isLoading ? (
+          <div className="reader-loading">Загрузка...</div>
+        ) : error || !section || !content ? (
+          <div className="reader-error">
+            <h1>Раздел не найден</h1>
+            <p>{error || 'Запрошенный раздел не существует.'}</p>
+            <Link to="/" className="btn-primary">
+              На главную
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="reader-breadcrumb">
+              <Link to="/">Главная</Link>
+              <span className="separator">/</span>
+              <span>{volume?.title}</span>
+              <span className="separator">/</span>
+              <span>{section.title}</span>
+            </div>
+
+            <ReaderView content={content} />
+
+            <nav className="reader-navigation">
+              {prevSection ? (
+                <Link to={`/read/${prevSection.id}`} className="nav-prev">
+                  ← {prevSection.title}
+                </Link>
+              ) : (
+                <span className="nav-placeholder" />
+              )}
+
+              {nextSection ? (
+                <Link to={`/read/${nextSection.id}`} className="nav-next">
+                  {nextSection.title} →
+                </Link>
+              ) : (
+                <span className="nav-placeholder" />
+              )}
+            </nav>
+          </>
+        )}
       </div>
-
-      <ReaderView content={content} />
-
-      <nav className="reader-navigation">
-        {prevSection ? (
-          <Link to={`/read/${prevSection.id}`} className="nav-prev">
-            ← {prevSection.title}
-          </Link>
-        ) : (
-          <span className="nav-placeholder" />
-        )}
-
-        {nextSection ? (
-          <Link to={`/read/${nextSection.id}`} className="nav-next">
-            {nextSection.title} →
-          </Link>
-        ) : (
-          <span className="nav-placeholder" />
-        )}
-      </nav>
     </div>
   );
 }

@@ -1,0 +1,147 @@
+.sidebar {
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+  background-color: var(--color-bg-secondary);
+  border-right: 1px solid var(--color-border);
+  height: 100vh;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+}
+
+.sidebar__header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sidebar__header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.sidebar__nav {
+  padding: 0.5rem 0;
+}
+
+.sidebar__volume {
+  margin-bottom: 0.25rem;
+}
+
+.sidebar__volume-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sidebar__volume-title:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.sidebar__volume-icon {
+  font-size: 0.625rem;
+  margin-top: 0.25rem;
+  color: var(--color-text-secondary);
+}
+
+.sidebar__sections {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar__section-link {
+  display: block;
+  padding: 0.5rem 1.25rem 0.5rem 2.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.sidebar__section-link:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--color-text-primary);
+}
+
+.sidebar__section-link.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Mobile drawer styles */
+.sidebar__overlay {
+  display: none;
+}
+
+.sidebar__close {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1001;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+
+  .sidebar__close:hover {
+    color: var(--color-text-primary);
+  }
+
+  .sidebar__overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+
+  .sidebar__overlay.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+}
