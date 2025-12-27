@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { MainLayout } from './components/layout';
+import { EmailLinkHandler } from './components/auth';
 import { SettingsProvider, AuthProvider, ProgressProvider, NotesProvider } from './contexts';
 import {
   HomePage,
@@ -17,6 +18,7 @@ function App() {
         <ProgressProvider>
           <NotesProvider>
             <BrowserRouter>
+              <EmailLinkHandler />
               <MainLayout>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
