@@ -1,14 +1,14 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useAuth } from './AuthContext';
+import {
+  subscribeToProgress,
+  saveProgress as saveProgressToFirestore,
+  migrateProgressToFirestore,
+  type ProgressState,
+} from '../lib/firestore';
+import { isFirebaseConfigured } from '../lib/firebase';
 import type { SectionStatus } from '../types';
 import { tableOfContents } from '../content';
-
-interface ProgressState {
-  [sectionId: string]: {
-    status: SectionStatus;
-    bookmarked?: boolean;
-    completedAt?: string;
-  };
-}
 
 interface ProgressContextType {
   progress: ProgressState;
@@ -26,7 +26,7 @@ const ProgressContext = createContext<ProgressContextType | null>(null);
 
 const STORAGE_KEY = 'lamrim-progress';
 
-function loadProgress(): ProgressState {
+function loadLocalProgress(): ProgressState {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -38,12 +38,16 @@ function loadProgress(): ProgressState {
   return {};
 }
 
-function saveProgress(progress: ProgressState): void {
+function saveLocalProgress(progress: ProgressState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
   } catch (e) {
     console.error('Failed to save progress:', e);
   }
+}
+
+function clearLocalProgress(): void {
+  localStorage.removeItem(STORAGE_KEY);
 }
 
 function getTotalSections(): number {
@@ -54,11 +58,65 @@ function getTotalSections(): number {
 }
 
 export function ProgressProvider({ children }: { children: ReactNode }) {
-  const [progress, setProgress] = useState<ProgressState>(loadProgress);
+  const { user, status } = useAuth();
+  const [progress, setProgress] = useState<ProgressState>(loadLocalProgress);
+
+  const isAuthenticated = status === 'authenticated' && user && !user.isAnonymous;
+  const useFirestore = isFirebaseConfigured() && isAuthenticated && user;
 
   useEffect(() => {
-    saveProgress(progress);
-  }, [progress]);
+    if (!useFirestore || !user) return;
+
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
+
+    const setupSync = async () => {
+      const localProgress = loadLocalProgress();
+
+      if (Object.keys(localProgress).length > 0) {
+        try {
+          await migrateProgressToFirestore(user.uid, localProgress);
+          if (!cancelled) {
+            clearLocalProgress();
+          }
+        } catch (error) {
+          console.error('Progress migration failed:', error);
+        }
+      }
+
+      if (cancelled) return;
+
+      unsubscribe = subscribeToProgress(user.uid, (firestoreProgress) => {
+        if (cancelled) return;
+        setProgress(firestoreProgress);
+      });
+    };
+
+    setupSync();
+
+    return () => {
+      cancelled = true;
+      if (unsubscribe) unsubscribe();
+    };
+  }, [useFirestore, user]);
+
+  // Save to localStorage when not using Firestore
+  useEffect(() => {
+    if (!useFirestore) {
+      saveLocalProgress(progress);
+    }
+  }, [progress, useFirestore]);
+
+  // Helper to update progress and sync to Firestore
+  const updateProgress = useCallback((updater: (prev: ProgressState) => ProgressState) => {
+    setProgress((prev) => {
+      const newProgress = updater(prev);
+      if (useFirestore && user) {
+        saveProgressToFirestore(user.uid, newProgress).catch(console.error);
+      }
+      return newProgress;
+    });
+  }, [useFirestore, user]);
 
   const getSectionStatus = useCallback((sectionId: string): SectionStatus => {
     return progress[sectionId]?.status || 'available';
@@ -69,7 +127,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }, [progress]);
 
   const markAsCompleted = useCallback((sectionId: string) => {
-    setProgress((prev) => ({
+    updateProgress((prev) => ({
       ...prev,
       [sectionId]: {
         ...prev[sectionId],
@@ -77,10 +135,10 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         completedAt: new Date().toISOString(),
       },
     }));
-  }, []);
+  }, [updateProgress]);
 
   const markAsUnread = useCallback((sectionId: string) => {
-    setProgress((prev) => {
+    updateProgress((prev) => {
       const current = prev[sectionId];
       if (current?.bookmarked) {
         return {
@@ -95,10 +153,10 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       delete newProgress[sectionId];
       return newProgress;
     });
-  }, []);
+  }, [updateProgress]);
 
   const toggleBookmark = useCallback((sectionId: string) => {
-    setProgress((prev) => {
+    updateProgress((prev) => {
       const current = prev[sectionId];
       const newBookmarked = !current?.bookmarked;
 
@@ -117,11 +175,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         },
       };
     });
-  }, []);
+  }, [updateProgress]);
 
   const resetProgress = useCallback(() => {
-    setProgress({});
-  }, []);
+    updateProgress(() => ({}));
+  }, [updateProgress]);
 
   const completedCount = Object.values(progress).filter(
     (p) => p.status === 'completed'

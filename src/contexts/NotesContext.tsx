@@ -1,4 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useAuth } from './AuthContext';
+import {
+  subscribeToNotes,
+  saveNote,
+  deleteNoteFromFirestore,
+  migrateNotesToFirestore,
+} from '../lib/firestore';
+import { isFirebaseConfigured } from '../lib/firebase';
 import type { Note } from '../types';
 
 interface NotesState {
@@ -22,7 +30,7 @@ function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
 
-function loadNotes(): NotesState {
+function loadLocalNotes(): NotesState {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -34,7 +42,7 @@ function loadNotes(): NotesState {
   return {};
 }
 
-function saveNotes(notes: NotesState): void {
+function saveLocalNotes(notes: NotesState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
   } catch (e) {
@@ -42,12 +50,64 @@ function saveNotes(notes: NotesState): void {
   }
 }
 
+function clearLocalNotes(): void {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
 export function NotesProvider({ children }: { children: ReactNode }) {
-  const [notesState, setNotesState] = useState<NotesState>(loadNotes);
+  const { user, status } = useAuth();
+  const [notesState, setNotesState] = useState<NotesState>(loadLocalNotes);
+
+  const isAuthenticated = status === 'authenticated' && user && !user.isAnonymous;
+  const useFirestore = isFirebaseConfigured() && isAuthenticated && user;
 
   useEffect(() => {
-    saveNotes(notesState);
-  }, [notesState]);
+    if (!useFirestore || !user) return;
+
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
+
+    const setupSync = async () => {
+      const localNotes = loadLocalNotes();
+      const localNotesArray = Object.values(localNotes);
+
+      if (localNotesArray.length > 0) {
+        try {
+          await migrateNotesToFirestore(user.uid, localNotesArray);
+          if (!cancelled) {
+            clearLocalNotes();
+          }
+        } catch (error) {
+          console.error('Notes migration failed:', error);
+        }
+      }
+
+      if (cancelled) return;
+
+      unsubscribe = subscribeToNotes(user.uid, (firestoreNotes) => {
+        if (cancelled) return;
+        const notesMap: NotesState = {};
+        firestoreNotes.forEach((note) => {
+          notesMap[note.id] = note;
+        });
+        setNotesState(notesMap);
+      });
+    };
+
+    setupSync();
+
+    return () => {
+      cancelled = true;
+      if (unsubscribe) unsubscribe();
+    };
+  }, [useFirestore, user]);
+
+  // Save to localStorage when not using Firestore
+  useEffect(() => {
+    if (!useFirestore) {
+      saveLocalNotes(notesState);
+    }
+  }, [notesState, useFirestore]);
 
   const notes = Object.values(notesState).sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
@@ -64,35 +124,48 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   }, [notesState]);
 
   const addNote = useCallback((sectionId: string, content: string): Note => {
-    const now = new Date().toISOString();
+    const now = new Date();
     const note: Note = {
       id: generateId(),
       sectionId,
       content,
-      createdAt: new Date(now),
-      updatedAt: new Date(now),
+      createdAt: now,
+      updatedAt: now,
     };
+
     setNotesState((prev) => ({
       ...prev,
       [note.id]: note,
     }));
+
+    if (useFirestore && user) {
+      saveNote(user.uid, note).catch(console.error);
+    }
+
     return note;
-  }, []);
+  }, [useFirestore, user]);
 
   const updateNote = useCallback((noteId: string, content: string) => {
     setNotesState((prev) => {
       const note = prev[noteId];
       if (!note) return prev;
+
+      const updatedNote = {
+        ...note,
+        content,
+        updatedAt: new Date(),
+      };
+
+      if (useFirestore && user) {
+        saveNote(user.uid, updatedNote).catch(console.error);
+      }
+
       return {
         ...prev,
-        [noteId]: {
-          ...note,
-          content,
-          updatedAt: new Date(),
-        },
+        [noteId]: updatedNote,
       };
     });
-  }, []);
+  }, [useFirestore, user]);
 
   const deleteNote = useCallback((noteId: string) => {
     setNotesState((prev) => {
@@ -100,7 +173,11 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       delete newNotes[noteId];
       return newNotes;
     });
-  }, []);
+
+    if (useFirestore && user) {
+      deleteNoteFromFirestore(user.uid, noteId).catch(console.error);
+    }
+  }, [useFirestore, user]);
 
   return (
     <NotesContext.Provider
