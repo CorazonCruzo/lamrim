@@ -31,11 +31,19 @@ const LINE_HEIGHT_OPTIONS: { value: LineHeight; label: string }[] = [
 
 export default function SettingsPage() {
   const { settings, setTheme, setFontSize, setFontFamily, setLineHeight, resetSettings } = useSettings();
-  const { user, status } = useAuth();
+  const { user, status, signOut } = useAuth();
   const [showEmailModal, setShowEmailModal] = useState(false);
 
   const isAnonymous = status === 'anonymous' || user?.isAnonymous;
   const userEmail = user?.email;
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out failed:', error);
+    }
+  };
 
   return (
     <div className="settings-page">
@@ -57,9 +65,17 @@ export default function SettingsPage() {
               </button>
             </>
           ) : (
-            <p className="settings-account-info settings-account-info--linked">
-              Email: <strong>{userEmail}</strong>
-            </p>
+            <>
+              <p className="settings-account-info settings-account-info--linked">
+                Email: <strong>{userEmail}</strong>
+              </p>
+              <button
+                className="settings-sign-out"
+                onClick={handleSignOut}
+              >
+                Выйти
+              </button>
+            </>
           )}
         </div>
       </section>

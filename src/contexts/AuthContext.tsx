@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import {
   signInAnonymously,
+  signOut as firebaseSignOut,
   onAuthStateChanged,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
@@ -23,6 +24,7 @@ interface AuthContextType {
   linkEmail: (email: string) => Promise<void>;
   checkPendingEmailLink: () => boolean;
   getStoredEmail: () => string | null;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -89,6 +91,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.history.replaceState(null, '', window.location.pathname);
   };
 
+  const signOut = async () => {
+    if (!auth) throw new Error('Firebase not configured');
+    await firebaseSignOut(auth);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -100,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         linkEmail,
         checkPendingEmailLink,
         getStoredEmail,
+        signOut,
       }}
     >
       {children}
