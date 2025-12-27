@@ -2,16 +2,27 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import {
   signInAnonymously,
   onAuthStateChanged,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
+  linkWithCredential,
+  EmailAuthProvider,
   type User
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../lib/firebase';
 import type { AuthStatus } from '../types';
 
+const EMAIL_STORAGE_KEY = 'emailForSignIn';
+
 interface AuthContextType {
   user: User | null;
   status: AuthStatus;
   isConfigured: boolean;
-  signInAnonymouslyHandler: () => Promise<void>;
+  sendEmailLink: (email: string) => Promise<void>;
+  completeEmailSignIn: (email: string) => Promise<void>;
+  linkEmail: (email: string) => Promise<void>;
+  checkPendingEmailLink: () => boolean;
+  getStoredEmail: () => string | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -22,7 +33,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isConfigured = isFirebaseConfigured();
 
   useEffect(() => {
-    // Если Firebase не настроен, переходим в анонимный режим без Firebase
     if (!isConfigured || !auth) {
       setStatus('anonymous');
       return;
@@ -44,13 +54,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [isConfigured]);
 
-  const signInAnonymouslyHandler = async () => {
-    if (!auth) return;
-    try {
-      await signInAnonymously(auth);
-    } catch (error) {
-      console.error('Failed to sign in anonymously:', error);
-    }
+  const actionCodeSettings = {
+    url: window.location.origin,
+    handleCodeInApp: true,
+  };
+
+  const sendEmailLink = async (email: string) => {
+    if (!auth) throw new Error('Firebase not configured');
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    localStorage.setItem(EMAIL_STORAGE_KEY, email);
+  };
+
+  const checkPendingEmailLink = () => {
+    if (!auth) return false;
+    return isSignInWithEmailLink(auth, window.location.href);
+  };
+
+  const getStoredEmail = () => {
+    return localStorage.getItem(EMAIL_STORAGE_KEY);
+  };
+
+  const completeEmailSignIn = async (email: string) => {
+    if (!auth) throw new Error('Firebase not configured');
+    await signInWithEmailLink(auth, email, window.location.href);
+    localStorage.removeItem(EMAIL_STORAGE_KEY);
+    window.history.replaceState(null, '', window.location.pathname);
+  };
+
+  const linkEmail = async (email: string) => {
+    if (!auth || !user) throw new Error('No user to link');
+    const credential = EmailAuthProvider.credentialWithLink(email, window.location.href);
+    await linkWithCredential(user, credential);
+    localStorage.removeItem(EMAIL_STORAGE_KEY);
+    window.history.replaceState(null, '', window.location.pathname);
   };
 
   return (
@@ -59,7 +95,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         status,
         isConfigured,
-        signInAnonymouslyHandler,
+        sendEmailLink,
+        completeEmailSignIn,
+        linkEmail,
+        checkPendingEmailLink,
+        getStoredEmail,
       }}
     >
       {children}
