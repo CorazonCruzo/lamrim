@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   setDoc,
   deleteDoc,
@@ -86,11 +87,63 @@ export async function migrateNotesToFirestore(userId: string, notes: Note[]): Pr
 
 export interface ProgressEntry {
   status: SectionStatus;
+  statusUpdatedAt: string;
   bookmarked?: boolean;
-  completedAt?: string;
+  bookmarkUpdatedAt?: string;
 }
 
 export type ProgressState = Record<string, ProgressEntry>;
+
+export function mergeProgressByTimestamp(
+  local: ProgressState,
+  remote: ProgressState
+): ProgressState {
+  const allSectionIds = new Set([
+    ...Object.keys(local),
+    ...Object.keys(remote),
+  ]);
+
+  const merged: ProgressState = {};
+
+  for (const sectionId of allSectionIds) {
+    const localEntry = local[sectionId];
+    const remoteEntry = remote[sectionId];
+
+    if (!remoteEntry) {
+      merged[sectionId] = localEntry;
+      continue;
+    }
+
+    if (!localEntry) {
+      merged[sectionId] = remoteEntry;
+      continue;
+    }
+
+    const localStatusTime = new Date(localEntry.statusUpdatedAt).getTime();
+    const remoteStatusTime = new Date(remoteEntry.statusUpdatedAt).getTime();
+    const localBookmarkTime = localEntry.bookmarkUpdatedAt
+      ? new Date(localEntry.bookmarkUpdatedAt).getTime()
+      : 0;
+    const remoteBookmarkTime = remoteEntry.bookmarkUpdatedAt
+      ? new Date(remoteEntry.bookmarkUpdatedAt).getTime()
+      : 0;
+
+    merged[sectionId] = {
+      status: localStatusTime > remoteStatusTime ? localEntry.status : remoteEntry.status,
+      statusUpdatedAt: localStatusTime > remoteStatusTime
+        ? localEntry.statusUpdatedAt
+        : remoteEntry.statusUpdatedAt,
+      bookmarked: localBookmarkTime > remoteBookmarkTime
+        ? localEntry.bookmarked
+        : remoteEntry.bookmarked,
+      bookmarkUpdatedAt: localBookmarkTime > remoteBookmarkTime
+        ? localEntry.bookmarkUpdatedAt
+        : remoteEntry.bookmarkUpdatedAt,
+    };
+  }
+
+  return merged;
+}
 
 function progressDoc(userId: string) {
   if (!db) throw new Error('Firestore not configured');
@@ -99,7 +152,6 @@ function progressDoc(userId: string) {
 
 export async function fetchProgress(userId: string): Promise<ProgressState> {
   if (!db) return {};
-  const { getDoc } = await import('firebase/firestore');
   const snapshot = await getDoc(progressDoc(userId));
   return (snapshot.data() as ProgressState) || {};
 }
@@ -119,8 +171,13 @@ export async function saveProgress(userId: string, progress: ProgressState): Pro
 
 export async function migrateProgressToFirestore(
   userId: string,
-  progress: ProgressState
-): Promise<void> {
-  if (!db || Object.keys(progress).length === 0) return;
-  await setDoc(progressDoc(userId), progress, { merge: true });
+  localProgress: ProgressState
+): Promise<ProgressState> {
+  if (!db || Object.keys(localProgress).length === 0) return localProgress;
+
+  const remoteProgress = await fetchProgress(userId);
+  const merged = mergeProgressByTimestamp(localProgress, remoteProgress);
+
+  await setDoc(progressDoc(userId), merged);
+  return merged;
 }

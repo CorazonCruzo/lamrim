@@ -4,6 +4,7 @@ import {
   subscribeToProgress,
   saveProgress as saveProgressToFirestore,
   migrateProgressToFirestore,
+  mergeProgressByTimestamp,
   type ProgressState,
 } from '../lib/firestore';
 import { isFirebaseConfigured } from '../lib/firebase';
@@ -75,9 +76,10 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
       if (Object.keys(localProgress).length > 0) {
         try {
-          await migrateProgressToFirestore(user.uid, localProgress);
+          const merged = await migrateProgressToFirestore(user.uid, localProgress);
           if (!cancelled) {
             clearLocalProgress();
+            setProgress(merged);
           }
         } catch (error) {
           console.error('Progress migration failed:', error);
@@ -88,7 +90,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
       unsubscribe = subscribeToProgress(user.uid, (firestoreProgress) => {
         if (cancelled) return;
-        setProgress(firestoreProgress);
+        setProgress((current) => mergeProgressByTimestamp(current, firestoreProgress));
       });
     };
 
@@ -127,58 +129,65 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }, [progress]);
 
   const markAsCompleted = useCallback((sectionId: string) => {
-    updateProgress((prev) => ({
-      ...prev,
-      [sectionId]: {
-        ...prev[sectionId],
-        status: 'completed',
-        completedAt: new Date().toISOString(),
-      },
-    }));
+    updateProgress((prev) => {
+      const current = prev[sectionId];
+      return {
+        ...prev,
+        [sectionId]: {
+          status: 'completed',
+          statusUpdatedAt: new Date().toISOString(),
+          bookmarked: current?.bookmarked,
+          bookmarkUpdatedAt: current?.bookmarkUpdatedAt,
+        },
+      };
+    });
   }, [updateProgress]);
 
   const markAsUnread = useCallback((sectionId: string) => {
     updateProgress((prev) => {
       const current = prev[sectionId];
-      if (current?.bookmarked) {
-        return {
-          ...prev,
-          [sectionId]: {
-            status: 'available',
-            bookmarked: true,
-          },
-        };
-      }
-      const newProgress = { ...prev };
-      delete newProgress[sectionId];
-      return newProgress;
+      return {
+        ...prev,
+        [sectionId]: {
+          status: 'available',
+          statusUpdatedAt: new Date().toISOString(),
+          bookmarked: current?.bookmarked,
+          bookmarkUpdatedAt: current?.bookmarkUpdatedAt,
+        },
+      };
     });
   }, [updateProgress]);
 
   const toggleBookmark = useCallback((sectionId: string) => {
     updateProgress((prev) => {
       const current = prev[sectionId];
-      const newBookmarked = !current?.bookmarked;
-
-      if (!newBookmarked && (!current?.status || current.status === 'available')) {
-        const newProgress = { ...prev };
-        delete newProgress[sectionId];
-        return newProgress;
-      }
-
       return {
         ...prev,
         [sectionId]: {
-          ...current,
           status: current?.status || 'available',
-          bookmarked: newBookmarked,
+          statusUpdatedAt: current?.statusUpdatedAt || new Date().toISOString(),
+          bookmarked: !current?.bookmarked,
+          bookmarkUpdatedAt: new Date().toISOString(),
         },
       };
     });
   }, [updateProgress]);
 
   const resetProgress = useCallback(() => {
-    updateProgress(() => ({}));
+    updateProgress((prev) => {
+      const now = new Date().toISOString();
+      const reset: ProgressState = {};
+      for (const sectionId of Object.keys(prev)) {
+        const current = prev[sectionId];
+        reset[sectionId] = {
+          status: 'available',
+          statusUpdatedAt: now,
+          bookmarked: current?.bookmarked,
+          bookmarkUpdatedAt: current?.bookmarkUpdatedAt,
+        };
+      }
+      return reset;
+    });
   }, [updateProgress]);
 
   const completedCount = Object.values(progress).filter(
