@@ -5,6 +5,21 @@
   background-color: var(--color-bg-primary);
 }
 
+.note-card__section {
+  margin-bottom: 0.5rem;
+}
+
+.note-card__section-link {
+  font-size: var(--reader-font-size);
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.note-card__section-link:hover {
+  text-decoration: underline;
+}
+
 .note-card__header {
   display: flex;
   align-items: center;
@@ -20,12 +35,6 @@
 .note-card__actions {
   display: flex;
   gap: 0.25rem;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.note-card:hover .note-card__actions {
-  opacity: 1;
 }
 
 .note-card__btn {

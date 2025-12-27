@@ -1,22 +1,11 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useNotes } from '../contexts';
-import { ConfirmDialog } from '../components/common';
-import { NoteEditor, NoteContent } from '../components/notes';
+import { NoteEditor, NoteCard } from '../components/notes';
 import { tableOfContents, getSectionById } from '../content';
 import { exportAllNotesToPdf } from '../lib/pdf-export';
 import type { Note } from '../types';
 import './NotesPage.css';
-
-function formatDate(date: Date): string {
-  const d = new Date(date);
-  return d.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
 
 interface NoteWithSection extends Note {
   sectionTitle: string;
@@ -28,8 +17,7 @@ export default function NotesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVolume, setSelectedVolume] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'section'>('date');
-  const [editingNote, setEditingNote] = useState<NoteWithSection | null>(null);
-  const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 
   const enrichedNotes = useMemo((): NoteWithSection[] => {
     return notes.map((note) => {
@@ -76,42 +64,32 @@ export default function NotesPage() {
     return result;
   }, [enrichedNotes, searchQuery, selectedVolume, sortBy]);
 
-  const handleStartEdit = (note: NoteWithSection) => {
-    setEditingNote(note);
-  };
+  const handleEdit = useCallback((note: Note) => {
+    setEditingNoteId(note.id);
+  }, []);
 
   const handleSaveEdit = useCallback((content: string) => {
-    if (editingNote) {
-      updateNote(editingNote.id, content);
-      setEditingNote(null);
+    if (editingNoteId) {
+      updateNote(editingNoteId, content);
+      setEditingNoteId(null);
     }
-  }, [editingNote, updateNote]);
+  }, [editingNoteId, updateNote]);
 
-  const handleCancelEdit = () => {
-    setEditingNote(null);
-  };
+  const handleCancelEdit = useCallback(() => {
+    setEditingNoteId(null);
+  }, []);
 
   const handleDeleteFromEditor = useCallback(() => {
-    if (editingNote) {
-      setDeleteNoteId(editingNote.id);
+    if (editingNoteId) {
+      deleteNote(editingNoteId);
+      setEditingNoteId(null);
     }
-  }, [editingNote]);
-
-  const handleDeleteRequest = (noteId: string) => {
-    setDeleteNoteId(noteId);
-  };
-
-  const handleConfirmDelete = () => {
-    if (deleteNoteId) {
-      deleteNote(deleteNoteId);
-      setDeleteNoteId(null);
-    }
-  };
+  }, [editingNoteId, deleteNote]);
 
   const handleExportAll = async () => {
-    if (notes.length === 0) return;
+    if (filteredNotes.length === 0) return;
     try {
-      await exportAllNotesToPdf(notes);
+      await exportAllNotesToPdf(filteredNotes);
     } catch (error) {
       console.error('Failed to export notes:', error);
     }
@@ -180,21 +158,11 @@ export default function NotesPage() {
 
           <div className="notes-page__list">
             {filteredNotes.map((note) => (
-              <div key={note.id} className="notes-page__item">
-                <div className="notes-page__item-header">
-                  <Link
-                    to={`/read/${note.sectionId}`}
-                    className="notes-page__section-link"
-                  >
-                    {note.sectionTitle}
-                  </Link>
-                  <span className="notes-page__date">{formatDate(note.updatedAt)}</span>
-                </div>
-
-                {editingNote?.id === note.id ? (
+              <div key={note.id}>
+                {editingNoteId === note.id ? (
                   <div className="notes-page__edit">
                     <NoteEditor
-                      initialContent={editingNote.content}
+                      initialContent={note.content}
                       onSave={handleSaveEdit}
                       onCancel={handleCancelEdit}
                       onDelete={handleDeleteFromEditor}
@@ -202,43 +170,19 @@ export default function NotesPage() {
                     />
                   </div>
                 ) : (
-                  <>
-                    <div className="notes-page__item-content">
-                      <NoteContent content={note.content} />
-                    </div>
-
-                    <div className="notes-page__item-actions">
-                      <button
-                        onClick={() => handleStartEdit(note)}
-                        className="notes-page__action-btn"
-                        title="Редактировать"
-                      >
-                        ✎
-                      </button>
-                      <button
-                        onClick={() => handleDeleteRequest(note.id)}
-                        className="notes-page__action-btn notes-page__action-btn--delete"
-                        title="Удалить"
-                      >
-                        🗑
-                      </button>
-                    </div>
-                  </>
+                  <NoteCard
+                    note={note}
+                    onEdit={handleEdit}
+                    onDelete={deleteNote}
+                    sectionTitle={note.sectionTitle}
+                    sectionLink={`/read/${note.sectionId}`}
+                  />
                 )}
               </div>
             ))}
           </div>
         </>
       )}
-
-      <ConfirmDialog
-        isOpen={deleteNoteId !== null}
-        title="Удаление заметки"
-        message="Вы уверены, что хотите удалить эту заметку?"
-        confirmText="Удалить"
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteNoteId(null)}
-      />
     </div>
   );
 }
