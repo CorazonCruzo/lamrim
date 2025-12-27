@@ -94,6 +94,16 @@ export interface ProgressEntry {
 
 export type ProgressState = Record<string, ProgressEntry>;
 
+function getTimestamp(entry: ProgressEntry & { updatedAt?: string }, field: 'status' | 'bookmark'): number {
+  if (field === 'status') {
+    const ts = entry.statusUpdatedAt || entry.updatedAt;
+    return ts ? new Date(ts).getTime() : 0;
+  } else {
+    const ts = entry.bookmarkUpdatedAt || entry.updatedAt;
+    return ts ? new Date(ts).getTime() : 0;
+  }
+}
+
 export function mergeProgressByTimestamp(
   local: ProgressState,
   remote: ProgressState
@@ -119,24 +129,21 @@ export function mergeProgressByTimestamp(
       continue;
     }
 
-    const localStatusTime = new Date(localEntry.statusUpdatedAt).getTime();
-    const remoteStatusTime = new Date(remoteEntry.statusUpdatedAt).getTime();
-    const localBookmarkTime = localEntry.bookmarkUpdatedAt
-      ? new Date(localEntry.bookmarkUpdatedAt).getTime()
-      : 0;
-    const remoteBookmarkTime = remoteEntry.bookmarkUpdatedAt
-      ? new Date(remoteEntry.bookmarkUpdatedAt).getTime()
-      : 0;
+    const localStatusTime = getTimestamp(localEntry, 'status');
+    const remoteStatusTime = getTimestamp(remoteEntry, 'status');
+    const localBookmarkTime = getTimestamp(localEntry, 'bookmark');
+    const remoteBookmarkTime = getTimestamp(remoteEntry, 'bookmark');
+
+    const statusFromLocal = localStatusTime >= remoteStatusTime;
+    const bookmarkFromLocal = localBookmarkTime >= remoteBookmarkTime;
 
     merged[sectionId] = {
-      status: localStatusTime > remoteStatusTime ? localEntry.status : remoteEntry.status,
-      statusUpdatedAt: localStatusTime > remoteStatusTime
-        ? localEntry.statusUpdatedAt
-        : remoteEntry.statusUpdatedAt,
-      bookmarked: localBookmarkTime > remoteBookmarkTime
-        ? localEntry.bookmarked
-        : remoteEntry.bookmarked,
-      bookmarkUpdatedAt: localBookmarkTime > remoteBookmarkTime
+      status: statusFromLocal ? localEntry.status : remoteEntry.status,
+      statusUpdatedAt: statusFromLocal
+        ? (localEntry.statusUpdatedAt || new Date().toISOString())
+        : (remoteEntry.statusUpdatedAt || new Date().toISOString()),
+      bookmarked: bookmarkFromLocal ? localEntry.bookmarked : remoteEntry.bookmarked,
+      bookmarkUpdatedAt: bookmarkFromLocal
         ? localEntry.bookmarkUpdatedAt
         : remoteEntry.bookmarkUpdatedAt,
     };
@@ -148,6 +155,19 @@ export function mergeProgressByTimestamp(
 function progressDoc(userId: string) {
   if (!db) throw new Error('Firestore not configured');
   return doc(db, 'users', userId, 'data', 'progress');
+}
+
+function cleanProgressForFirestore(progress: ProgressState): Record<string, Record<string, unknown>> {
+  const cleaned: Record<string, Record<string, unknown>> = {};
+  for (const [sectionId, entry] of Object.entries(progress)) {
+    cleaned[sectionId] = {};
+    for (const [key, value] of Object.entries(entry)) {
+      if (value !== undefined) {
+        cleaned[sectionId][key] = value;
+      }
+    }
+  }
+  return cleaned;
 }
 
 export async function fetchProgress(userId: string): Promise<ProgressState> {
@@ -166,7 +186,7 @@ export function subscribeToProgress(
 }
 
 export async function saveProgress(userId: string, progress: ProgressState): Promise<void> {
-  await setDoc(progressDoc(userId), progress);
+  await setDoc(progressDoc(userId), cleanProgressForFirestore(progress));
 }
 
 export async function migrateProgressToFirestore(
@@ -178,6 +198,6 @@ export async function migrateProgressToFirestore(
   const remoteProgress = await fetchProgress(userId);
   const merged = mergeProgressByTimestamp(localProgress, remoteProgress);
 
-  await setDoc(progressDoc(userId), merged);
+  await setDoc(progressDoc(userId), cleanProgressForFirestore(merged));
   return merged;
 }

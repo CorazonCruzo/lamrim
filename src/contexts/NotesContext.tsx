@@ -50,10 +50,6 @@ function saveLocalNotes(notes: NotesState): void {
   }
 }
 
-function clearLocalNotes(): void {
-  localStorage.removeItem(STORAGE_KEY);
-}
-
 export function NotesProvider({ children }: { children: ReactNode }) {
   const { user, status } = useAuth();
   const [notesState, setNotesState] = useState<NotesState>(loadLocalNotes);
@@ -74,9 +70,6 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       if (localNotesArray.length > 0) {
         try {
           await migrateNotesToFirestore(user.uid, localNotesArray);
-          if (!cancelled) {
-            clearLocalNotes();
-          }
         } catch (error) {
           console.error('Notes migration failed:', error);
         }
@@ -102,12 +95,10 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     };
   }, [useFirestore, user]);
 
-  // Save to localStorage when not using Firestore
+  // Always save to localStorage as cache for fast initial load
   useEffect(() => {
-    if (!useFirestore) {
-      saveLocalNotes(notesState);
-    }
-  }, [notesState, useFirestore]);
+    saveLocalNotes(notesState);
+  }, [notesState]);
 
   const notes = Object.values(notesState).sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()

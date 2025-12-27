@@ -47,10 +47,6 @@ function saveLocalProgress(progress: ProgressState): void {
   }
 }
 
-function clearLocalProgress(): void {
-  localStorage.removeItem(STORAGE_KEY);
-}
-
 function getTotalSections(): number {
   return tableOfContents.volumes.reduce(
     (total, volume) => total + volume.sections.length,
@@ -78,7 +74,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         try {
           const merged = await migrateProgressToFirestore(user.uid, localProgress);
           if (!cancelled) {
-            clearLocalProgress();
             setProgress(merged);
           }
         } catch (error) {
@@ -102,20 +97,22 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     };
   }, [useFirestore, user]);
 
-  // Save to localStorage when not using Firestore
+  // Always save to localStorage as cache for fast initial load
   useEffect(() => {
-    if (!useFirestore) {
-      saveLocalProgress(progress);
-    }
-  }, [progress, useFirestore]);
+    saveLocalProgress(progress);
+  }, [progress]);
 
   // Helper to update progress and sync to Firestore
   const updateProgress = useCallback((updater: (prev: ProgressState) => ProgressState) => {
     setProgress((prev) => {
       const newProgress = updater(prev);
+
       if (useFirestore && user) {
-        saveProgressToFirestore(user.uid, newProgress).catch(console.error);
+        queueMicrotask(() => {
+          saveProgressToFirestore(user.uid, newProgress).catch(console.error);
+        });
       }
+
       return newProgress;
     });
   }, [useFirestore, user]);
@@ -128,16 +125,20 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     return progress[sectionId]?.bookmarked || false;
   }, [progress]);
 
+  const getOldTimestamp = (entry: ProgressState[string] & { updatedAt?: string } | undefined): string | undefined => {
+    return entry?.updatedAt;
+  };
+
   const markAsCompleted = useCallback((sectionId: string) => {
     updateProgress((prev) => {
-      const current = prev[sectionId];
+      const current = prev[sectionId] as ProgressState[string] & { updatedAt?: string } | undefined;
       return {
         ...prev,
         [sectionId]: {
           status: 'completed',
           statusUpdatedAt: new Date().toISOString(),
           bookmarked: current?.bookmarked,
-          bookmarkUpdatedAt: current?.bookmarkUpdatedAt,
+          bookmarkUpdatedAt: current?.bookmarkUpdatedAt || getOldTimestamp(current),
         },
       };
     });
@@ -145,14 +146,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   const markAsUnread = useCallback((sectionId: string) => {
     updateProgress((prev) => {
-      const current = prev[sectionId];
+      const current = prev[sectionId] as ProgressState[string] & { updatedAt?: string } | undefined;
       return {
         ...prev,
         [sectionId]: {
           status: 'available',
           statusUpdatedAt: new Date().toISOString(),
           bookmarked: current?.bookmarked,
-          bookmarkUpdatedAt: current?.bookmarkUpdatedAt,
+          bookmarkUpdatedAt: current?.bookmarkUpdatedAt || getOldTimestamp(current),
         },
       };
     });
@@ -160,12 +161,12 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   const toggleBookmark = useCallback((sectionId: string) => {
     updateProgress((prev) => {
-      const current = prev[sectionId];
+      const current = prev[sectionId] as ProgressState[string] & { updatedAt?: string } | undefined;
       return {
         ...prev,
         [sectionId]: {
           status: current?.status || 'available',
-          statusUpdatedAt: current?.statusUpdatedAt || new Date().toISOString(),
+          statusUpdatedAt: current?.statusUpdatedAt || getOldTimestamp(current) || new Date().toISOString(),
           bookmarked: !current?.bookmarked,
           bookmarkUpdatedAt: new Date().toISOString(),
         },
@@ -178,12 +179,12 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       const now = new Date().toISOString();
       const reset: ProgressState = {};
       for (const sectionId of Object.keys(prev)) {
-        const current = prev[sectionId];
+        const current = prev[sectionId] as ProgressState[string] & { updatedAt?: string } | undefined;
         reset[sectionId] = {
           status: 'available',
           statusUpdatedAt: now,
           bookmarked: current?.bookmarked,
-          bookmarkUpdatedAt: current?.bookmarkUpdatedAt,
+          bookmarkUpdatedAt: current?.bookmarkUpdatedAt || getOldTimestamp(current),
         };
       }
       return reset;
