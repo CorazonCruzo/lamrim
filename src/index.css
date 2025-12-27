@@ -3,9 +3,10 @@
   --color-primary-dark: #3f51b5;
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #f5f5f5;
-  --color-text-primary: #333333;
-  --color-text-secondary: #666666;
+  --color-text-primary: #111111;
+  --color-text-secondary: #3a3a3a;
   --color-border: #e0e0e0;
+  --sidebar-hover-bg: #eaeaea;
 
   --font-serif: Georgia, 'Times New Roman', serif;
   --font-sans: system-ui, -apple-system, sans-serif;
@@ -25,19 +26,21 @@
 /* Dark theme */
 [data-theme="dark"] {
   --color-bg-primary: #1a1a1a;
-  --color-bg-secondary: #2d2d2d;
-  --color-text-primary: #e0e0e0;
-  --color-text-secondary: #a0a0a0;
-  --color-border: #404040;
+  --color-bg-secondary: #242424;
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #c8c8c8;
+  --color-border: #3a3a3a;
+  --sidebar-hover-bg: #333333;
 }
 
 /* Sepia theme */
 [data-theme="sepia"] {
-  --color-bg-primary: #f4ecd8;
-  --color-bg-secondary: #e8dcc8;
-  --color-text-primary: #5c4b37;
-  --color-text-secondary: #7a6a56;
-  --color-border: #d4c4a8;
+  --color-bg-primary: #fdf8f0;
+  --color-bg-secondary: #f5efe5;
+  --color-text-primary: #1a1408;
+  --color-text-secondary: #4a3d20;
+  --color-border: #e0d4c0;
+  --sidebar-hover-bg: #ebe0d0;
 }
 
 /* Font sizes */

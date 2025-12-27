@@ -1,0 +1,37 @@
+.note-content {
+  font-size: var(--reader-font-size);
+  line-height: var(--reader-line-height);
+  color: var(--color-text-primary);
+  max-height: calc(4em * var(--reader-line-height));
+  overflow-y: auto;
+}
+
+.note-content p {
+  margin: 0 0 0.75rem 0;
+  white-space: pre-wrap;
+}
+
+.note-content p:last-child {
+  margin-bottom: 0;
+}
+
+.note-content h1,
+.note-content h2,
+.note-content h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.note-content ul,
+.note-content ol {
+  margin-bottom: 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.note-content blockquote {
+  margin: 0.75rem 0;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--color-border);
+  color: var(--color-text-secondary);
+}

@@ -72,7 +72,7 @@
 }
 
 .sidebar__volume-title:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--sidebar-hover-bg);
 }
 
 .sidebar__volume-icon {
@@ -119,12 +119,16 @@
   font-size: 0.625rem;
 }
 
+.sidebar__section-link.status-completed {
+  background-color: rgba(76, 175, 80, 0.12);
+}
+
 .sidebar__section-link.status-completed .sidebar__status-icon {
   color: rgba(76, 175, 80, 0.6);
 }
 
 .sidebar__section-link:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--sidebar-hover-bg);
   color: var(--color-text-primary);
   text-decoration: none;
 }

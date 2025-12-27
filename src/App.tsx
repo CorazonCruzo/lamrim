@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { MainLayout } from './components/layout';
-import { SettingsProvider, AuthProvider, ProgressProvider } from './contexts';
+import { SettingsProvider, AuthProvider, ProgressProvider, NotesProvider } from './contexts';
 import {
   HomePage,
   ReaderPage,
@@ -15,17 +15,19 @@ function App() {
     <AuthProvider>
       <SettingsProvider>
         <ProgressProvider>
-          <BrowserRouter>
-            <MainLayout>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/read/:sectionId" element={<ReaderPage />} />
-                <Route path="/notes" element={<NotesPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </MainLayout>
-          </BrowserRouter>
+          <NotesProvider>
+            <BrowserRouter>
+              <MainLayout>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/read/:sectionId" element={<ReaderPage />} />
+                  <Route path="/notes" element={<NotesPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </MainLayout>
+            </BrowserRouter>
+          </NotesProvider>
         </ProgressProvider>
       </SettingsProvider>
     </AuthProvider>

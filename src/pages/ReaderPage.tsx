@@ -4,6 +4,7 @@ import { useSection } from '../hooks/useSection';
 import { useProgress } from '../contexts';
 import { ReaderView } from '../components/reader';
 import { Sidebar } from '../components/layout';
+import { NotesList } from '../components/notes';
 import './ReaderPage.css';
 
 export default function ReaderPage() {
@@ -88,6 +89,8 @@ export default function ReaderPage() {
             </div>
 
             <ReaderView content={content} />
+
+            {sectionId && <NotesList sectionId={sectionId} />}
 
             <nav className="reader-navigation">
               {prevSection ? (
