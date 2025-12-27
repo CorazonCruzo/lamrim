@@ -76,6 +76,32 @@
   color: var(--color-text-primary);
 }
 
+.settings-account-info {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+}
+
+.settings-account-info--linked {
+  color: var(--color-text-primary);
+}
+
+.settings-link-email {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-primary);
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.settings-link-email:hover {
+  background-color: var(--color-primary-dark);
+}
+
 @media (max-width: 480px) {
   .settings-options {
     flex-direction: column;

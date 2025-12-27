@@ -1,4 +1,6 @@
-import { useSettings } from '../contexts';
+import { useState } from 'react';
+import { useSettings, useAuth } from '../contexts';
+import { EmailLinkModal } from '../components/auth';
 import type { Theme, FontSize, FontFamily, LineHeight } from '../types';
 import './SettingsPage.css';
 
@@ -29,10 +31,43 @@ const LINE_HEIGHT_OPTIONS: { value: LineHeight; label: string }[] = [
 
 export default function SettingsPage() {
   const { settings, setTheme, setFontSize, setFontFamily, setLineHeight, resetSettings } = useSettings();
+  const { user, status } = useAuth();
+  const [showEmailModal, setShowEmailModal] = useState(false);
+
+  const isAnonymous = status === 'anonymous' || user?.isAnonymous;
+  const userEmail = user?.email;
 
   return (
     <div className="settings-page">
       <h1>Настройки</h1>
+
+      <section className="settings-section">
+        <h2>Аккаунт</h2>
+        <div className="settings-group">
+          {isAnonymous ? (
+            <>
+              <p className="settings-account-info">
+                Вы используете анонимный аккаунт. Данные хранятся только на этом устройстве.
+              </p>
+              <button
+                className="settings-link-email"
+                onClick={() => setShowEmailModal(true)}
+              >
+                Привязать email
+              </button>
+            </>
+          ) : (
+            <p className="settings-account-info settings-account-info--linked">
+              Email: <strong>{userEmail}</strong>
+            </p>
+          )}
+        </div>
+      </section>
+
+      <EmailLinkModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+      />
 
       <section className="settings-section">
         <h2>Оформление</h2>
