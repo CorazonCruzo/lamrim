@@ -20,6 +20,10 @@ const contentFiles: Record<string, () => Promise<string>> = {
   '1-velichie-dharmy': () => import('../content/volumes/volume-1/03-velichie-dharmy.md?raw').then(m => m.default),
   '1-pravila-slushaniya-i-propovedovaniya': () => import('../content/volumes/volume-1/04-pravila-slushaniya-i-propovedovaniya.md?raw').then(m => m.default),
   '1-vverenie-sebya-blagomu-drugu': () => import('../content/volumes/volume-1/05-vverenie-sebya-blagomu-drugu.md?raw').then(m => m.default),
+  '1-kratkoe-izlozhenie-pravil-praktiki': () => import('../content/volumes/volume-1/06-kratkoe-izlozhenie-pravil-praktiki.md?raw').then(m => m.default),
+  '1-uprazdnenie-lozhnyh-predstavleniy': () => import('../content/volumes/volume-1/07-uprazdnenie-lozhnyh-predstavleniy.md?raw').then(m => m.default),
+  '1-nadelenie-smyslom-blagopriyatnogo-rozhdeniya': () => import('../content/volumes/volume-1/08-nadelenie-smyslom-blagopriyatnogo-rozhdeniya.md?raw').then(m => m.default),
+  '1-etap-nizshey-lichnosti': () => import('../content/volumes/volume-1/09-etap-nizshey-lichnosti.md?raw').then(m => m.default),
 };
 
 export function useSection(sectionId: string | undefined): UseSectionResult {
