@@ -16,8 +16,6 @@ import re
 import sys
 import os
 from dataclasses import dataclass
-from typing import Optional
-from transliterate import translit
 
 
 # Chapter definitions: (title, start_page, end_page, slug)
