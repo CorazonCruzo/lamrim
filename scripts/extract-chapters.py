@@ -18,14 +18,20 @@ import os
 from dataclasses import dataclass
 
 
-# Chapter definitions: (title, start_page, end_page, slug)
+# Chapter definitions: (title, start_page, end_page, slug, start_marker, end_marker)
 # Pages are 0-indexed
+# start_marker: text that marks where the chapter begins
+# end_marker: text that marks where the chapter ends (usually next chapter's start_marker)
 VOLUME_1_CHAPTERS = [
-    ("Введение", 110, 115, "vvedenie"),
-    ("Величие автора", 115, 127, "velichie-avtora"),
-    ("Величие Дхармы", 127, 140, "velichie-dharmy"),
-    ("Правила слушания и проповедования Дхармы", 140, 157, "pravila-slushaniya-i-propovedovaniya"),
-    ("Вверение себя благому другу", 157, 194, "vverenie-sebya-blagomu-drugu"),
+    ("Введение", 110, 116, "vvedenie", None, "1. Автор"),
+    ("Величие автора", 114, 128, "velichie-avtora", "1. Автор", "Дхарма, [о которой идет речь]"),
+    ("Величие Дхармы", 126, 141, "velichie-dharmy", "Дхарма, [о которой идет речь]", "3. Правила слушания"),
+    ("Правила слушания и проповедования Дхармы", 139, 160, "pravila-slushaniya-i-propovedovaniya", "3. Правила слушания", "Основа пути"),
+    ("Вверение себя благому другу", 157, 195, "vverenie-sebya-blagomu-drugu", "Основа пути", "II. Краткое изложение"),
+    ("Краткое изложение правил практики", 192, 218, "kratkoe-izlozhenie-pravil-praktiki", "II. Краткое изложение", "§2 Упразднение ложных"),
+    ("Упразднение ложных представлений об аналитическом созерцании", 215, 230, "uprazdnenie-lozhnyh-predstavleniy", "§2 Упразднение ложных", "после вверения"),
+    ("Наделение смыслом благоприятного рождения", 227, 270, "nadelenie-smyslom-blagopriyatnogo-rozhdeniya", "после вверения", "Здесь три [книги]"),
+    ("Этап духовного развития низшей личности", 265, 300, "etap-nizshey-lichnosti", "Здесь три [книги]", None),
 ]
 
 
@@ -314,6 +320,18 @@ def process_footnote_block(lines_data: list) -> str:
     return ' '.join(parts).strip()
 
 
+def replace_tibetan_ornaments(text: str) -> str:
+    """Replace TibetanMachine font ornaments (PUA chars) with Unicode symbol."""
+    # U+F021, U+F022, U+F023 are ornamental marks from TibetanMachineNormalA
+    # Replace with ❧ (floral heart) or remove entirely
+    text = text.replace('\uf021', '')
+    text = text.replace('\uf022', '')
+    text = text.replace('\uf023', '')
+    # Clean up multiple spaces that may result
+    text = re.sub(r'  +', ' ', text)
+    return text.strip()
+
+
 def process_line_spans(spans: list) -> str:
     """
     Process spans in a line, adding proper spacing between them.
@@ -326,6 +344,10 @@ def process_line_spans(spans: list) -> str:
 
     for i, span in enumerate(spans):
         text = span.text
+
+        # Skip TibetanMachine ornamental characters
+        if 'TibetanMachine' in span.font:
+            continue
 
         # Handle footnote markers (superscript numbers)
         if span.is_superscript:
@@ -370,6 +392,16 @@ def join_hyphenated(text: str) -> str:
 def clean_markdown(text: str) -> str:
     """Post-process markdown for better readability."""
 
+    # Remove TibetanMachine PUA characters (U+F021, U+F022, U+F023)
+    text = text.replace('\uf021', '')
+    text = text.replace('\uf022', '')
+    text = text.replace('\uf023', '')
+
+    # Remove lines that are just ] (remnants from TibetanMachine ornament removal)
+    lines = text.split('\n')
+    lines = [line for line in lines if line.strip() != ']']
+    text = '\n'.join(lines)
+
     # Join hyphenated words
     text = join_hyphenated(text)
 
@@ -408,24 +440,47 @@ def format_poetry_as_blockquote(text: str) -> str:
     return text
 
 
-def extract_chapter(doc, start_page: int, end_page: int, title: str) -> str:
-    """Extract a single chapter from the PDF."""
+def extract_chapter(doc, start_page: int, end_page: int, title: str, start_marker: str = None, end_marker: str = None) -> str:
+    """Extract a single chapter from the PDF.
+
+    Args:
+        start_marker: If provided, skip content until this text is found.
+        end_marker: If provided, stop extraction when this text is found.
+    """
     all_paragraphs = []
     all_footnotes = {}
+    found_start = start_marker is None  # If no marker, start immediately
+    found_end = False
 
     for page_num in range(start_page, end_page):
+        if found_end:
+            break
+
         page = doc[page_num]
         page_height = page.rect.height
 
         result = extract_page(page, page_num, page_height)
 
         for para_text, is_poetry, is_header, is_subheading in result['paragraphs']:
+            # Check for end marker first
+            if end_marker and end_marker in para_text:
+                found_end = True
+                break
+
+            # If we haven't found the start marker yet, look for it
+            if not found_start:
+                if start_marker and start_marker in para_text:
+                    found_start = True
+                else:
+                    continue  # Skip content before start marker
+
             if is_poetry:
                 # Format poetry as blockquote
                 para_text = format_poetry_as_blockquote(para_text)
             all_paragraphs.append(para_text)
 
-        all_footnotes.update(result['footnotes'])
+        if not found_end:
+            all_footnotes.update(result['footnotes'])
 
     # Build final text
     content = f"# {title}\n\n"
@@ -463,16 +518,16 @@ def main():
 
     if args.list:
         print("Available chapters:")
-        for i, (title, start, end, slug) in enumerate(chapters, 1):
+        for i, (title, start, end, slug, start_marker, end_marker) in enumerate(chapters, 1):
             print(f"  {i}. {title} (pages {start+1}-{end})")
         sys.exit(0)
 
     # Parse chapter selection
     if args.chapters:
         indices = [int(x) - 1 for x in args.chapters.split(',')]
-        selected = [chapters[i] for i in indices if 0 <= i < len(chapters)]
+        selected = [(i, chapters[i]) for i in indices if 0 <= i < len(chapters)]
     else:
-        selected = chapters[:5]
+        selected = [(i, chapters[i]) for i in range(min(5, len(chapters)))]
 
     # Open PDF
     doc = fitz.open(args.pdf_path)
@@ -484,13 +539,14 @@ def main():
     print(f"Extracting {len(selected)} chapters to {output_dir}")
     print()
 
-    for i, (title, start, end, slug) in enumerate(selected, 1):
-        print(f"  [{i}/{len(selected)}] {title}...", end=" ", flush=True)
+    for idx, (chapter_idx, (title, start, end, slug, start_marker, end_marker)) in enumerate(selected, 1):
+        chapter_num = chapter_idx + 1  # 1-based chapter number
+        print(f"  [{idx}/{len(selected)}] Chapter {chapter_num}: {title}...", end=" ", flush=True)
 
-        content = extract_chapter(doc, start, end, title)
+        content = extract_chapter(doc, start, end, title, start_marker, end_marker)
 
-        # Write file
-        filename = f"{i:02d}-{slug}.md"
+        # Write file with correct chapter number
+        filename = f"{chapter_num:02d}-{slug}.md"
         filepath = os.path.join(output_dir, filename)
 
         with open(filepath, 'w', encoding='utf-8') as f:
