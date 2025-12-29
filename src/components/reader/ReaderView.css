@@ -103,3 +103,16 @@
 .reader-view a:hover {
   color: var(--color-primary-dark);
 }
+
+.reader-view .footnote-ref {
+  font-size: 0.75em;
+  vertical-align: super;
+  color: var(--color-primary);
+  margin-left: 1px;
+}
+
+.reader-view h3 {
+  text-align: center;
+  font-weight: normal;
+  font-style: italic;
+}
