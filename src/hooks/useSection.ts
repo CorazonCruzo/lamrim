@@ -15,9 +15,11 @@ interface UseSectionResult {
 // Маппинг volumeId-slug -> файл
 const contentFiles: Record<string, () => Promise<string>> = {
   // Volume 1
-  '1-introduction': () => import('../content/volumes/volume-1/01-introduction.md?raw').then(m => m.default),
-  '1-listening-dharma': () => import('../content/volumes/volume-1/02-listening-dharma.md?raw').then(m => m.default),
-  '1-spiritual-teacher': () => import('../content/volumes/volume-1/03-spiritual-teacher.md?raw').then(m => m.default),
+  '1-vvedenie': () => import('../content/volumes/volume-1/01-vvedenie.md?raw').then(m => m.default),
+  '1-velichie-avtora': () => import('../content/volumes/volume-1/02-velichie-avtora.md?raw').then(m => m.default),
+  '1-velichie-dharmy': () => import('../content/volumes/volume-1/03-velichie-dharmy.md?raw').then(m => m.default),
+  '1-pravila-slushaniya-i-propovedovaniya': () => import('../content/volumes/volume-1/04-pravila-slushaniya-i-propovedovaniya.md?raw').then(m => m.default),
+  '1-vverenie-sebya-blagomu-drugu': () => import('../content/volumes/volume-1/05-vverenie-sebya-blagomu-drugu.md?raw').then(m => m.default),
   // Volume 4
   '4-bezmyatezhnost-shamatkha-suschnost-meditatsii': () => import('../content/volumes/volume-4/07-bezmyatezhnost-shamatkha-suschnost-meditatsii.md?raw').then(m => m.default),
   '4-1-polza-osvoeniya-bezmyatezhnosti-i-proniknoveniya': () => import('../content/volumes/volume-4/08-1-polza-osvoeniya-bezmyatezhnosti-i-proniknoveniya.md?raw').then(m => m.default),
