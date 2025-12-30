@@ -15,6 +15,10 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
+function markdownLinksToHtml(text: string): string {
+  return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+}
+
 function transformFootnotes(text: string): string {
   const parts = text.split(/\n---\n/);
 
@@ -39,15 +43,15 @@ function transformFootnotes(text: string): string {
     /\[\^(\d+)\]/g,
     (_, num) => {
       const footnoteText = footnotesMap[num] || '';
-      const escapedText = escapeHtml(footnoteText);
-      return `<sup id="fnref-${num}" class="footnote-ref"><a href="#fn-${num}">${num}</a><span class="footnote-tooltip"><span class="footnote-tooltip-scroll"><span class="footnote-tooltip-num">${num}</span>${escapedText}</span></span></sup>`;
+      const processedText = markdownLinksToHtml(escapeHtml(footnoteText));
+      return `<sup id="fnref-${num}" class="footnote-ref"><a href="#fn-${num}">${num}</a><span class="footnote-tooltip"><span class="footnote-tooltip-scroll"><span class="footnote-tooltip-num">${num}</span>${processedText}</span></span></sup>`;
     }
   );
 
   const processedFootnotes = footnotesSection.replace(
     /\[\^(\d+)\]:\s*([\s\S]*?)(?=\n\n\[\^\d+\]:|$)/g,
     (_, num, fnText) => {
-      const cleanText = fnText.trim();
+      const cleanText = markdownLinksToHtml(fnText.trim());
       return `<div id="fn-${num}" class="footnote-def"><a href="#fnref-${num}" class="footnote-backref" title="Вернуться к тексту">↩</a> <span class="footnote-num">${num}</span> ${cleanText}</div>\n\n`;
     }
   );
