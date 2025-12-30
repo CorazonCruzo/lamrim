@@ -109,6 +109,7 @@
   vertical-align: super;
   margin-left: 1px;
   scroll-margin-top: 20px;
+  position: relative;
 }
 
 .reader-view .footnote-ref a {
@@ -118,8 +119,55 @@
   border-bottom: 1px solid transparent;
 }
 
-.reader-view .footnote-ref a:hover {
+.reader-view .footnote-ref:hover a {
   border-bottom-color: var(--color-primary);
+}
+
+.reader-view .footnote-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 12px 14px 16px;
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  text-align: left;
+  white-space: normal;
+  z-index: 1000;
+}
+
+.reader-view .footnote-ref:hover .footnote-tooltip {
+  display: block;
+}
+
+.reader-view .footnote-ref::after {
+  content: '';
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  height: 280px;
+  background: transparent;
+  pointer-events: none;
+}
+
+.reader-view .footnote-ref:hover::after {
+  pointer-events: auto;
+}
+
+.reader-view .footnote-tooltip-num {
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-right: 6px;
 }
 
 .reader-view .footnotes-section {
