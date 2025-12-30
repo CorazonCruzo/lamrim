@@ -40,7 +40,7 @@ function transformFootnotes(text: string): string {
     (_, num) => {
       const footnoteText = footnotesMap[num] || '';
       const escapedText = escapeHtml(footnoteText);
-      return `<sup id="fnref-${num}" class="footnote-ref"><a href="#fn-${num}">${num}</a><span class="footnote-tooltip"><span class="footnote-tooltip-num">${num}</span>${escapedText}</span></sup>`;
+      return `<sup id="fnref-${num}" class="footnote-ref"><a href="#fn-${num}">${num}</a><span class="footnote-tooltip"><span class="footnote-tooltip-scroll"><span class="footnote-tooltip-num">${num}</span>${escapedText}</span></span></sup>`;
     }
   );
 
