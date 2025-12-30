@@ -23,6 +23,7 @@ from dataclasses import dataclass
 # start_marker: text that marks where the chapter begins
 # end_marker: text that marks where the chapter ends (usually next chapter's start_marker)
 VOLUME_1_CHAPTERS = [
+    # Part 1: Intro and Teacher (already working)
     ("Введение", 110, 116, "vvedenie", None, "1. Автор"),
     ("Величие автора", 114, 128, "velichie-avtora", "1. Автор", "Дхарма, [о которой идет речь]"),
     ("Величие Дхармы", 126, 141, "velichie-dharmy", "Дхарма, [о которой идет речь]", "3. Правила слушания"),
@@ -31,7 +32,61 @@ VOLUME_1_CHAPTERS = [
     ("Краткое изложение правил практики", 192, 218, "kratkoe-izlozhenie-pravil-praktiki", "II. Краткое изложение", "§2 Упразднение ложных"),
     ("Упразднение ложных представлений об аналитическом созерцании", 215, 230, "uprazdnenie-lozhnyh-predstavleniy", "§2 Упразднение ложных", "после вверения"),
     ("Наделение смыслом благоприятного рождения", 227, 270, "nadelenie-smyslom-blagopriyatnogo-rozhdeniya", "после вверения", "Здесь три [книги]"),
-    ("Этап духовного развития низшей личности", 265, 300, "etap-nizshey-lichnosti", "Здесь три [книги]", None),
+
+    # Part 2: Lower Person (низшая личность) - book pages 159-336
+    ("Этап духовного развития низшей личности", 265, 270, "etap-nizshey-lichnosti", "Здесь три [книги]", None),
+    ("Памятование о смерти", 270, 294, "pamyatovanie-o-smerti", None, None),  # book 163-187
+    ("После смерти: счастливые и несчастные уделы", 294, 322, "posle-smerti", None, None),  # book 187-215
+    ("Обращение к Прибежищу", 322, 368, "obrashhenie-k-pribezhishhu", None, None),  # book 215-261
+    ("Общие размышления о законе кармы", 368, 377, "obshchie-razmyshleniya-o-zakone-karmy", None, None),  # book 261-270
+    ("Дурные пути кармы", 377, 419, "durnye-puti-karmy", None, None),  # book 270-312
+    ("Выбор правильного поведения", 419, 426, "vybor-pravilnogo-povedeniya", None, None),  # book 312-319
+    ("Очищение четырьмя силами", 426, 444, "ochishchenie-chetyrmya-silami", None, None),  # book 319-337
+
+    # Part 3: Middle Person (средняя личность) - book pages 337-466
+    ("Этап духовного развития средней личности", 444, 452, "etap-sredney-lichnosti", None, None),  # book 337-345
+    ("Размышление о страдании", 452, 490, "razmyshlenie-o-stradanii", None, None),  # book 345-383
+    ("Истина источника — причины страдания", 490, 542, "istina-istochnika", None, None),  # book 383-435
+    ("Основы пути Освобождения", 542, 552, "osnovy-puti-osvobozhdeniya", None, None),  # book 435-445
+    ("Особенности трех практик", 552, 574, "osobennosti-treh-praktik", None, None),  # book 445-467
+
+    # Part 4: Higher Person (высшая личность) - book pages 467-622
+    ("Этап духовного развития высшей личности", 574, 580, "etap-vysshey-lichnosti", None, None),  # book 467-473
+    ("Устремленность к Пробуждению", 580, 600, "ustremlennost-k-probuzhdeniyu", None, None),  # book 473-493
+    ("Основа пути Махаяны — сострадание", 600, 644, "osnova-puti-mahayany-sostradanie", None, None),  # book 493-537
+    ("Обретение устремленности к Пробуждению", 644, 686, "obretenie-ustremlennosti", None, None),  # book 537-579
+    ("Почему нельзя достичь Будды без метода и мудрости", 686, 706, "pochemu-nelzya-dostich-buddy", None, None),  # book 579-599
+    ("Этапы практики бодхисаттвы", 706, 730, "etapy-praktiki-bodhisattvy", None, None),  # book 599-623
+
+    # Part 5: Six Paramitas - book pages 623-775
+    ("Даяние", 730, 767, "dayanie", None, None),  # book 623-660
+    ("Нравственность", 767, 778, "nravstvennost", None, None),  # book 660-671
+    ("Терпение", 778, 822, "terpenie", None, None),  # book 671-715
+    ("Усердие", 822, 860, "userdie", None, None),  # book 715-753
+    ("Медитация", 860, 863, "meditatsiya", None, None),  # book 753-756
+    ("Мудрость", 863, 882, "mudrost", None, None),  # book 756-775
+]
+
+# Volume 2 chapters
+# Book page to PDF page offset: PDF = book - 781
+VOLUME_2_CHAPTERS = [
+    # Безмятежность (Shamatha)
+    ("Безмятежность и проникновение", 9, 33, "bezmyatezhnost-i-proniknovenie", None, None),  # book 790-814
+    ("Правила практики безмятежности", 33, 124, "pravila-praktiki-bezmyatezhnosti", None, None),  # book 814-905
+    ("Способы продвижения на основе безмятежности", 124, 149, "sposoby-prodvizheniya", None, None),  # book 905-930
+
+    # Проникновение (Vipashyana)
+    ("Снаряжение для проникновения", 149, 166, "snaryazhenie-dlya-proniknoveniya", None, None),  # book 930-947
+    ("Определение объекта отрицания", 166, 299, "opredelenie-obekta-otritsaniya", None, None),  # book 947-1080
+    ("Прасанга или сватантра", 299, 367, "prasanga-ili-svatantra", None, None),  # book 1080-1148
+    ("Как развить воззрение посредством прасанги", 367, 441, "kak-razvit-vozzrenie", None, None),  # book 1148-1222
+    ("Разновидности проникновения", 441, 447, "raznovidnosti-proniknoveniya", None, None),  # book 1222-1228
+    ("Правила освоения проникновения", 447, 488, "pravila-osvoeniya-proniknoveniya", None, None),  # book 1228-1269
+
+    # Завершение
+    ("Метод сочетания безмятежности и проникновения", 488, 500, "metod-sochetaniya", None, None),  # book 1269-1281
+    ("Особая практика Ваджраяны", 500, 504, "osobaya-praktika-vadzhrayany", None, None),  # book 1281-1285
+    ("Завершающие строфы и колофон", 504, 512, "zavershenie", None, None),  # book 1285-1293
 ]
 
 
@@ -512,6 +567,8 @@ def main():
 
     if args.volume == 1:
         chapters = VOLUME_1_CHAPTERS
+    elif args.volume == 2:
+        chapters = VOLUME_2_CHAPTERS
     else:
         print(f"Volume {args.volume} not configured yet", file=sys.stderr)
         sys.exit(1)
