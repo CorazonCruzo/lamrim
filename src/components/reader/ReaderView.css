@@ -107,8 +107,58 @@
 .reader-view .footnote-ref {
   font-size: 0.75em;
   vertical-align: super;
-  color: var(--color-primary);
   margin-left: 1px;
+  scroll-margin-top: 20px;
+}
+
+.reader-view .footnote-ref a {
+  color: var(--color-primary);
+  text-decoration: none;
+  padding: 0 2px;
+  border-bottom: 1px solid transparent;
+}
+
+.reader-view .footnote-ref a:hover {
+  border-bottom-color: var(--color-primary);
+}
+
+.reader-view .footnotes-section {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--color-border);
+}
+
+.reader-view .footnote-def {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-bg-secondary);
+  border-radius: 4px;
+  font-size: 0.9em;
+  line-height: 1.6;
+  scroll-margin-top: 100px;
+}
+
+.reader-view .footnote-def:target {
+  background-color: var(--color-primary-light, rgba(59, 130, 246, 0.1));
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.reader-view .footnote-num {
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-right: 0.5rem;
+}
+
+.reader-view .footnote-backref {
+  display: inline-block;
+  margin-right: 0.5rem;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+}
+
+.reader-view .footnote-backref:hover {
+  color: var(--color-primary);
 }
 
 .reader-view h3 {
