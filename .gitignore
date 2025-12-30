@@ -26,3 +26,4 @@ dist-ssr
 *.pdf
 *.fb2
 *.epub
+.firebase
