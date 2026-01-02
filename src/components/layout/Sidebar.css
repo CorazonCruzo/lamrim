@@ -254,7 +254,8 @@
     z-index: 1001;
   }
 
-  .sidebar-wrapper .sidebar__toggle {
+  .sidebar-wrapper .sidebar__toggle,
+  .sidebar__expand-btn {
     display: none !important;
   }
 
