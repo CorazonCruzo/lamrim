@@ -12,6 +12,17 @@ export default function ReaderPage() {
   const { section, volume, content, isLoading, error, nextSection, prevSection } = useSection(sectionId);
   const { getSectionStatus, isBookmarked, markAsCompleted, markAsUnread, toggleBookmark } = useProgress();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('sidebarCollapsed') === 'true';
+  });
+
+  const handleToggleSidebarCollapse = () => {
+    setIsSidebarCollapsed(prev => {
+      const newValue = !prev;
+      localStorage.setItem('sidebarCollapsed', String(newValue));
+      return newValue;
+    });
+  };
 
   const status = sectionId ? getSectionStatus(sectionId) : 'available';
   const bookmarked = sectionId ? isBookmarked(sectionId) : false;
@@ -38,6 +49,8 @@ export default function ReaderPage() {
         currentSectionId={sectionId}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={handleToggleSidebarCollapse}
       />
 
       <div className="reader-page">

@@ -13,9 +13,11 @@ interface SidebarProps {
   currentSectionId?: string;
   isOpen?: boolean;
   onClose?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export default function Sidebar({ currentSectionId, isOpen = false, onClose }: SidebarProps) {
+export default function Sidebar({ currentSectionId, isOpen = false, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const location = useLocation();
   const { getSectionStatus, isBookmarked, completedCount, totalCount } = useProgress();
   const [expandedVolumes, setExpandedVolumes] = useState<Set<string>>(() => {
@@ -53,13 +55,27 @@ export default function Sidebar({ currentSectionId, isOpen = false, onClose }: S
         onClick={onClose}
       />
 
-      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
-        {/* Кнопка закрытия для мобильных */}
-        <button className="sidebar__close" onClick={onClose} aria-label="Закрыть меню">
-          ×
+      <div className={`sidebar-wrapper ${isCollapsed ? 'collapsed' : ''}`}>
+        <button
+          className="sidebar__toggle"
+          onClick={onToggleCollapse}
+          aria-label={isCollapsed ? 'Развернуть оглавление' : 'Свернуть оглавление'}
+        >
+          {isCollapsed ? '▶' : '◀'}
         </button>
 
-        <div className="sidebar__header">
+        <aside className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
+          {/* Кнопка закрытия для мобильных */}
+          <button className="sidebar__close" onClick={onClose} aria-label="Закрыть меню">
+            ×
+          </button>
+
+          <button className="sidebar__expand-btn" onClick={onToggleCollapse}>
+            <span className="sidebar__expand-icon">☰</span>
+            <span className="sidebar__expand-text">Оглавление</span>
+          </button>
+
+          <div className="sidebar__header">
           <h2>Оглавление</h2>
           <div className="sidebar__progress">
             <div className="sidebar__progress-text">
@@ -112,8 +128,9 @@ export default function Sidebar({ currentSectionId, isOpen = false, onClose }: S
               )}
             </div>
           ))}
-        </nav>
-      </aside>
+          </nav>
+        </aside>
+      </div>
     </>
   );
 }

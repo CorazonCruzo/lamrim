@@ -1,16 +1,16 @@
 .reader-layout {
   display: flex;
-  margin: -2rem;
-  margin-left: calc(-50vw + 50%);
-  margin-right: calc(-50vw + 50%);
-  width: 100vw;
   min-height: calc(100vh - 60px);
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-top: -2rem;
 }
 
 .reader-page {
   flex: 1;
-  max-width: 800px;
+  min-width: 0;
   padding: 2rem;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -76,9 +76,11 @@
   opacity: 0.4;
 }
 
-.reader-control--bookmark:hover {
-  opacity: 1;
-  color: var(--color-primary);
+@media (hover: hover) {
+  .reader-control--bookmark:hover {
+    opacity: 1;
+    color: var(--color-primary);
+  }
 }
 
 .reader-control--bookmark.active {
@@ -102,10 +104,12 @@
   position: relative;
 }
 
-.reader-control--status:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background-color: rgba(92, 107, 192, 0.1);
+@media (hover: hover) {
+  .reader-control--status:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background-color: rgba(92, 107, 192, 0.1);
+  }
 }
 
 .reader-control--status.completed {
@@ -114,9 +118,11 @@
   color: rgba(76, 175, 80, 0.8);
 }
 
-.reader-control--status.completed:hover {
-  background-color: rgba(76, 175, 80, 0.25);
-  border-color: rgba(76, 175, 80, 0.6);
+@media (hover: hover) {
+  .reader-control--status.completed:hover {
+    background-color: rgba(76, 175, 80, 0.25);
+    border-color: rgba(76, 175, 80, 0.6);
+  }
 }
 
 [data-tooltip] {
@@ -142,9 +148,11 @@
   z-index: 10;
 }
 
-[data-tooltip]:hover::after {
-  opacity: 1;
-  visibility: visible;
+@media (hover: hover) {
+  [data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+  }
 }
 
 .reader-navigation {
@@ -183,13 +191,8 @@
 }
 
 @media (max-width: 768px) {
-  .reader-layout {
-    margin: -1rem;
-  }
-
   .reader-page {
     padding: 1rem;
-    padding-left: 1rem;
   }
 
   .reader-menu-btn {
