@@ -1,32 +1,30 @@
-# Ламрим Ченмо — веб-читалка
+# Lamrim Chenmo — Web Reader
 
-Веб-приложение для чтения текста «Ламрим Ченмо» (Большое руководство к этапам Пути Пробуждения) Чже Цонкапы в переводе А. Кугявичуса под редакцией А. Терентьева.
+A web app for reading the *Lamrim Chenmo* (The Great Treatise on the Stages of the Path to Enlightenment) by Je Tsongkhapa, translated by A. Kugyavichyus, edited by A. Terentyev.
 
-**[Открыть читалку](https://lamrim.chestnykh.net)**
+**[Open Reader](https://lamrim.chestnykh.net)**
 
-## О проекте
+## About
 
-Основная идея — сделать удобным доступ к примечаниям второго тома издания. В печатной версии примечания вынесены в конец книги, что затрудняет чтение философских разделов, насыщенных ссылками и пояснениями переводчика.
+The main goal is to make footnotes from the second volume easily accessible. In the printed edition, footnotes are placed at the end of the book, making it difficult to read the philosophical sections that are dense with references and translator's commentary.
 
-В веб-версии:
-- Примечания отображаются во всплывающих подсказках при наведении
-- Ссылки на страницы книги заменены на кликабельные ссылки на соответствующие главы
-- Длинные примечания можно прокручивать прямо в подсказке
+In the web version:
+- Footnotes appear as tooltips on hover
+- Page references are replaced with clickable links to corresponding chapters
+- Long footnotes can be scrolled within the tooltip
 
-## Технологии
+## Tech Stack
 
 - React + TypeScript + Vite
-- Firebase (авторизация, хранение заметок и прогресса)
-- Markdown-рендеринг с поддержкой сносок
+- Firebase (auth, notes and progress storage)
+- Markdown rendering with footnote support
 
-## Источник текста
+## Source Text
 
-Текст взят из издания:
-
-> Чже Цонкапа. **Большое руководство к этапам Пути Пробуждения** (Ламрим Ченмо).
-> Перевод с тибетского А. Кугявичуса под общей редакцией А. Терентьева.
-> СПб.: Издательство А. Терентьева, 2007–2010. Тома 1–5.
+> Je Tsongkhapa. **The Great Treatise on the Stages of the Path to Enlightenment** (Lamrim Chenmo).
+> Translated from Tibetan by A. Kugyavichyus, edited by A. Terentyev.
+> St. Petersburg: A. Terentyev Publishing, 2007–2010. Volumes 1–5.
 
 ---
 
-*Проект создан для личного изучения текста и не преследует коммерческих целей.*
+*This project was created for personal study and has no commercial purpose.*
